@@ -31,6 +31,7 @@ option(IPC_WITH_TESTS     "Build unit tests using Catch2"                       
 option(IPC_WITH_GUROBI    "Enable Gurobi QP solver for SQP method"             OFF)
 option(IPC_WITH_OSQP_MKL  "Use MKL Pardiso linear solver in OSQP if available"  ON)
 option(IPC_WITH_OPENGL    "Use libgil viewer for preview and output"            ON)
+option(IPC_WITH_IPCTOOLKIT    "Use IPC Toolkit for self-contact computation"      OFF)
 set(IPC_LINSYSSOLVER "CHOLMOD" CACHE STRING "Linear system solver to use (options: CHOLMOD, AMGCL, EIGEN)")
 set_property(CACHE IPC_LINSYSSOLVER PROPERTY STRINGS "CHOLMOD" "AMGCL" "EIGEN")
 option(IPC_EXIT_UPON_QP_FAIL  "Exit if the QP/SQP intersects or blows-up" OFF)
@@ -117,19 +118,19 @@ target_link_libraries(${PROJECT_NAME}_bin PUBLIC CLI11::CLI11)
 # Etienne Vouga's CTCD Library
 ################################################################################
 
-add_library(EVCTCD "src/CCD/EVCTCD/CTCD.cpp")
-target_include_directories(EVCTCD PUBLIC "src/CCD/EVCTCD/")
+add_library(EVCTCD0 "src/CCD/EVCTCD/CTCD.cpp")
+target_include_directories(EVCTCD0 PUBLIC "src/CCD/EVCTCD/")
 # Link against Eigen in libigl
-target_link_libraries(EVCTCD PUBLIC igl::core)
+target_link_libraries(EVCTCD0 PUBLIC igl::core)
 # Turn of floating point contraction for CCD robustness
-target_compile_options(EVCTCD PUBLIC "-ffp-contract=off")
+target_compile_options(EVCTCD0 PUBLIC "-ffp-contract=off")
 
 ################################################################################
 # Required Libraries
 ################################################################################
 
 # EVCTCD
-target_link_libraries(${PROJECT_NAME}_dev PUBLIC EVCTCD)
+target_link_libraries(${PROJECT_NAME}_dev PUBLIC EVCTCD0)
 
 # SuiteSparse
 target_link_libraries(${PROJECT_NAME}_dev PUBLIC ${SUITESPARSE_LIBRARIES})
@@ -199,6 +200,11 @@ endif()
 
 # Extra warnings
 # target_link_libraries(${PROJECT_NAME}_dev PRIVATE warnings::all)
+
+if(IPC_WITH_IPCTOOLKIT)
+  target_link_libraries(${PROJECT_NAME}_dev PUBLIC IPCToolkit)
+  target_compile_definitions(${PROJECT_NAME}_dev PUBLIC USE_IPCTOOLKIT)
+endif()
 
 ################################################################################
 # Sub-Projects

@@ -102,3 +102,9 @@ endif()
 # Rational CCD
 download_rational_ccd()
 add_subdirectory(${IPC_EXTERNAL}/rational_ccd)
+
+# ipc toolkit
+if(NOT TARGET IPCToolkit)
+  download_ipc_toolkit()
+  add_subdirectory(${IPC_EXTERNAL}/ipc_toolkit EXCLUDE_FROM_ALL)
+endif()

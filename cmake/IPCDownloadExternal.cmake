@@ -113,3 +113,10 @@ function(download_rational_ccd)
     GIT_TAG        63fdb92b917c8d7349c9403656f1497df6fa6ce5
   )
 endfunction()
+
+# ipc toolkit
+function(download_ipc_toolkit)
+  custom_download_project(ipc_toolkit
+    GIT_REPOSITORY https://github.com/ipc-sim/ipc-toolkit
+  )
+endfunction()
