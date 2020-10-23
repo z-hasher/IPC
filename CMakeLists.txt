@@ -35,6 +35,7 @@ option(IPC_WITH_IPCTOOLKIT    "Use IPC Toolkit for self-contact computation"    
 set(IPC_LINSYSSOLVER "CHOLMOD" CACHE STRING "Linear system solver to use (options: CHOLMOD, AMGCL, EIGEN)")
 set_property(CACHE IPC_LINSYSSOLVER PROPERTY STRINGS "CHOLMOD" "AMGCL" "EIGEN")
 option(IPC_EXIT_UPON_QP_FAIL  "Exit if the QP/SQP intersects or blows-up" OFF)
+option(IPC_WITH_SIMD          "Enable SIMD instructions"                  OFF)
 
 
 if(NOT IPC_WITH_OPENGL)
@@ -233,21 +234,23 @@ endif()
 message(STATUS "Using scalar implmentation of SVD")
 target_compile_definitions(${PROJECT_NAME}_dev PUBLIC -DUSE_SCALAR_IMPLEMENTATION)
 
-# Figure out SSE level support
-#message(STATUS "Seaching for SSE...")
-#find_package(SSE)
+if(IPC_WITH_SIMD)
+  # Figure out SSE level support
+  message(STATUS "Seaching for SSE...")
+  find_package(SSE)
 
-# Figure out AVX level support
-#message(STATUS "Searching for AVX...")
-#find_package(AVX)
+  # Figure out AVX level support
+  message(STATUS "Searching for AVX...")
+  find_package(AVX)
 
-# Figure out FMA level support
-#message(STATUS "Searching for FMA...")
-#find_package(FMA)
+  # Figure out FMA level support
+  message(STATUS "Searching for FMA...")
+  find_package(FMA)
 
-# Add SSE, AVX, and FMA flags to compiler flags
-#string(REPLACE " " ";" SIMD_FLAGS "${SSE_FLAGS} ${AVX_FLAGS} ${FMA_FLAGS}")
-#target_compile_options(${PROJECT_NAME}_dev PUBLIC ${SIMD_FLAGS})
+  # Add SSE, AVX, and FMA flags to compiler flags
+  string(REPLACE " " ";" SIMD_FLAGS "${SSE_FLAGS} ${AVX_FLAGS} ${FMA_FLAGS}")
+  target_compile_options(${PROJECT_NAME}_dev PUBLIC ${SIMD_FLAGS})
+endif()
 
 # Add -pthread to compilation and linking
 find_package(Threads)
