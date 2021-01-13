@@ -103,6 +103,7 @@ public:
     std::string appendStr;
 
     std::vector<double> tuning; // the parameter that is currently tuning
+    bool useRelParameters = true;
     int fricIterAmt = 1;
     std::vector<double> scriptParams; // the parameters for setting script if any,
     // like initial velocity, position, etc

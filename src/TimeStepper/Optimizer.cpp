@@ -263,7 +263,10 @@ Optimizer<dim>::Optimizer(const Mesh<dim>& p_data0,
     if (animConfig.tuning.size() > 1) {
         dHatEps = animConfig.tuning[1];
     }
-    dHat = bboxDiagSize2 * dHatEps * dHatEps;
+    dHat = dHatEps * dHatEps;
+    if (animConfig.useRelParameters) {
+        dHat *= bboxDiagSize2;
+    }
 
     dHatTarget = bboxDiagSize2 * 1.0e-6;
     if (animConfig.tuning.size() > 2) {
@@ -407,7 +410,10 @@ void Optimizer<dim>::setTime(double duration, double dt)
 
     fricDHat0 = bboxDiagSize2 * 1.0e-6 * dtSq; // initial value of fricDHat
     if (animConfig.tuning.size() > 4) {
-        fricDHat0 = bboxDiagSize2 * animConfig.tuning[4] * animConfig.tuning[4] * dtSq;
+        fricDHat0 = animConfig.tuning[4] * animConfig.tuning[4] * dtSq;
+        if (animConfig.useRelParameters) {
+            fricDHat0 *= bboxDiagSize2;
+        }
     }
     fricDHatTarget = bboxDiagSize2 * 1.0e-6 * dtSq;
     if (animConfig.tuning.size() > 5) {
@@ -1485,7 +1491,10 @@ bool Optimizer<dim>::fullyImplicit_IP(void)
     timer_step.stop();
 
     fricDHat = solveFric ? fricDHat0 : -1.0;
-    dHat = bboxDiagSize2 * dHatEps * dHatEps;
+    dHat = dHatEps * dHatEps;
+    if (animConfig.useRelParameters) {
+        dHat *= bboxDiagSize2;
+    }
     computeConstraintSets(result);
 
     lastBarrierStiff = mu_IP;

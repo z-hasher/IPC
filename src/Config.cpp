@@ -493,6 +493,9 @@ int Config::loadFromFile(const std::string& p_filePath)
             else if (token == "fricIterAmt") {
                 ss >> fricIterAmt;
             }
+            else if (token == "useAbsParameters") {
+                useRelParameters = false;
+            }
 
             else if (token == "constraintOffset") {
                 ss >> constraintOffset;
