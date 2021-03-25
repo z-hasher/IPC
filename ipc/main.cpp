@@ -67,9 +67,6 @@ std::ofstream logFile;
 std::string outputFolderPath = "output/";
 
 // visualization
-#ifdef USE_OPENGL
-igl::opengl::glfw::Viewer viewer;
-#endif
 const int channel_initial = 0;
 const int channel_result = 1;
 int viewChannel = channel_result;
@@ -161,206 +158,11 @@ void proceedOptimization(int proceedNum = 1)
     }
 }
 
-void updateViewerData_distortion(void)
-{
-#ifdef USE_OPENGL
-    Eigen::MatrixXd color_distortionVis;
+void updateViewerData_distortion(void) {}
 
-    switch (showDistortion) {
-    case 2: { // show other triangle-based scalar fields
-        Eigen::VectorXd l2StretchPerElem;
-        Eigen::VectorXd faceWeight;
-#if (DIM == 2)
-        optimizer->getFaceFieldForVis(faceWeight);
-#else
-        Eigen::VectorXd faceWeight_tet;
-        optimizer->getFaceFieldForVis(faceWeight_tet);
-        faceWeight.conservativeResize(SF.rows());
-        for (int sfI = 0; sfI < SF.rows(); sfI++) {
-            if (sTri2Tet[sfI] < 0) {
-                faceWeight[sfI] = 0.0; // surface mesh
-            }
-            else {
-                faceWeight[sfI] = faceWeight_tet[sTri2Tet[sfI]];
-            }
-        }
-        faceWeight *= -1.0;
-#endif
-        igl::colormap(igl::COLOR_MAP_TYPE_VIRIDIS, faceWeight, true, color_distortionVis);
-        color_distortionVis.array() += 0.2;
-        color_distortionVis = color_distortionVis.array().min(1.0);
-        break;
-    }
+void updateViewerData(void) {}
 
-    case 0: {
-#if (DIM == 2)
-        color_distortionVis = Eigen::MatrixXd::Ones(triSoup[viewChannel]->F.rows(), 3);
-#else
-        color_distortionVis = Eigen::MatrixXd::Ones(SF.rows(), 3);
-#endif
-        color_distortionVis.col(2).setZero();
-        break;
-    }
-
-    case -1: {
-        assert(faceColors_default.rows() == ((DIM == 3) ? SF.rows() : triSoup[viewChannel]->F.rows()));
-        color_distortionVis = faceColors_default;
-        break;
-    }
-
-    default:
-        assert(0 && "unknown distortion visualization option!");
-        break;
-    }
-
-    if (showSeam) {
-        color_distortionVis.conservativeResize(color_distortionVis.rows() + seamColor.rows(), 3);
-        color_distortionVis.bottomRows(seamColor.rows()) = seamColor;
-    }
-
-    if (floorColor.rows() > 0) {
-        color_distortionVis.conservativeResize(color_distortionVis.rows() + floorColor.rows(), 3);
-        color_distortionVis.bottomRows(floorColor.rows()) = floorColor;
-    }
-
-    viewer.data().set_colors(color_distortionVis);
-#endif
-}
-
-void updateViewerData(void)
-{
-#ifdef USE_OPENGL
-    Eigen::MatrixXd UV_vis = triSoup[viewChannel]->V;
-    Eigen::MatrixXi F_vis = ((DIM == 2) ? triSoup[viewChannel]->F : SF);
-    if (viewUV) {
-        if constexpr (DIM == 2) {
-            UV_vis.conservativeResize(UV_vis.rows(), 3);
-            UV_vis.rightCols(1) = Eigen::VectorXd::Zero(UV_vis.rows());
-        }
-        viewer.core().align_camera_center((config.cameraTracking ? triSoup[viewChannel]->V : triSoup[viewChannel]->V_rest), F_vis);
-        floorColor.conservativeResize(0, 3);
-        for (const auto& coI : config.collisionObjects) {
-            coI->draw(UV_vis, F_vis, floorColor);
-        }
-        for (const auto& coI : config.meshCollisionObjects) {
-            coI->draw(UV_vis, F_vis, floorColor);
-        }
-
-        if ((UV_vis.rows() != viewer.data().V.rows()) || (F_vis.rows() != viewer.data().F.rows())) {
-            viewer.data().clear();
-        }
-        viewer.data().set_mesh(UV_vis, F_vis);
-
-        viewer.data().show_texture = false;
-#if (DIM == 2)
-        viewer.core().lighting_factor = 0.0;
-#else
-        if (isLighting) {
-            viewer.core().lighting_factor = 0.6;
-        }
-        else {
-            viewer.core().lighting_factor = 0.0;
-        }
-#endif
-
-        viewer.data().set_points(Eigen::MatrixXd::Zero(0, 3), Eigen::RowVector3d(0.0, 0.0, 0.0));
-        if (showFixedVerts) {
-            for (const auto& fixedVI : triSoup[viewChannel]->fixedVert) {
-                viewer.data().add_points(UV_vis.row(fixedVI), Eigen::RowVector3d(0.0, 0.0, 0.0));
-            }
-        }
-
-        // draw codimensional segment collision objects
-        viewer.data().clear_edges();
-        for (int ceI = 0; ceI < triSoup[viewChannel]->CE.rows(); ++ceI) {
-            viewer.data().add_edges(triSoup[viewChannel]->V.row(triSoup[viewChannel]->CE(ceI, 0)),
-                triSoup[viewChannel]->V.row(triSoup[viewChannel]->CE(ceI, 1)),
-                Eigen::RowVector3d(0.0, 0.0, 0.0));
-        }
-    }
-    else {
-        Eigen::MatrixXd V_vis = triSoup[viewChannel]->V_rest;
-        viewer.core().align_camera_center(V_vis, F_vis);
-
-        if ((V_vis.rows() != viewer.data().V.rows()) || (UV_vis.rows() != viewer.data().V_uv.rows()) || (F_vis.rows() != viewer.data().F.rows())) {
-            viewer.data().clear();
-        }
-        viewer.data().set_mesh(V_vis, F_vis);
-
-        if (showTexture) {
-            viewer.data().set_uv(UV_vis);
-            viewer.data().show_texture = true;
-        }
-        else {
-            viewer.data().show_texture = false;
-        }
-
-        if (isLighting) {
-            viewer.core().lighting_factor = 1.0;
-        }
-        else {
-            viewer.core().lighting_factor = 0.0;
-        }
-
-        viewer.data().set_points(Eigen::MatrixXd::Zero(0, 3), Eigen::RowVector3d(0.0, 0.0, 0.0));
-        if (showFixedVerts) {
-            for (const auto& fixedVI : triSoup[viewChannel]->fixedVert) {
-                viewer.data().add_points(V_vis.row(fixedVI), Eigen::RowVector3d(0.0, 0.0, 0.0));
-            }
-        }
-    }
-    updateViewerData_distortion();
-
-    viewer.data().compute_normals();
-#endif
-}
-
-void saveScreenshot(const std::string& filePath, double scale, bool writeGIF, bool writePNG)
-{
-#ifdef USE_OPENGL
-    if (offlineMode) {
-        return;
-    }
-
-    if (writeGIF) {
-        scale = GIFScale;
-    }
-    viewer.data().point_size = 5 * scale;
-
-    int width = static_cast<int>(scale * (viewer.core().viewport[2] - viewer.core().viewport[0]));
-    int height = static_cast<int>(scale * (viewer.core().viewport[3] - viewer.core().viewport[1]));
-
-    // Allocate temporary buffers for image
-    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> R(width, height);
-    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> G(width, height);
-    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> B(width, height);
-    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> A(width, height);
-
-    // Draw the scene in the buffers
-    viewer.core().draw_buffer(viewer.data(), false, R, G, B, A);
-
-    if (writePNG) {
-        // Save it to a PNG
-        igl::png::writePNG(R, G, B, A, filePath);
-    }
-
-    if (writeGIF && (iterNum % GIFStep == 0)) {
-        std::vector<uint8_t> img(width * height * 4);
-        for (int rowI = 0; rowI < width; rowI++) {
-            for (int colI = 0; colI < height; colI++) {
-                int indStart = (rowI + (height - 1 - colI) * width) * 4;
-                img[indStart] = R(rowI, colI);
-                img[indStart + 1] = G(rowI, colI);
-                img[indStart + 2] = B(rowI, colI);
-                img[indStart + 3] = A(rowI, colI);
-            }
-        }
-        GifWriteFrame(&GIFWriter, img.data(), width, height, GIFDelay);
-    }
-
-    viewer.data().point_size = 5;
-#endif
-}
+void saveScreenshot(const std::string& filePath, double scale, bool writeGIF, bool writePNG) {}
 
 void saveInfo(bool writePNG, bool writeGIF, int writeMesh, double save_dt)
 {
@@ -448,103 +250,17 @@ void toggleOptimization(void)
             spdlog::info("optimization converged.");
         }
         else {
-#ifdef USE_OPENGL
-            if (iterNum == 0) {
-                GifBegin(&GIFWriter, (outputFolderPath + "anim.gif").c_str(),
-                    GIFScale * (viewer.core().viewport[2] - viewer.core().viewport[0]),
-                    GIFScale * (viewer.core().viewport[3] - viewer.core().viewport[1]), GIFDelay);
-
-                saveScreenshot(outputFolderPath + "0.png", 0.5, true);
-            }
-            spdlog::info("start/resume optimization, press again to pause.");
-            viewer.core().is_animating = true;
-#endif
             time(&lastStart_world);
         }
     }
     else {
         spdlog::info("pause optimization, press again to resume.");
-#ifdef USE_OPENGL
-        viewer.core().is_animating = false;
-#endif
         spdlog::info("World Time:\nTime past: {:g} s.", secPast);
         secPast += difftime(time(NULL), lastStart_world);
     }
 }
 
-#ifdef USE_OPENGL
-bool key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int modifier)
-{
-    if ((key >= '0') && (key <= '9')) {
-        int changeToChannel = key - '0';
-        if ((changeToChannel < triSoup.size()) && (viewChannel != changeToChannel)) {
-            viewChannel = changeToChannel;
-        }
-    }
-    else {
-        switch (key) {
-        case ' ': {
-            proceedOptimization();
-            viewChannel = channel_result;
-            break;
-        }
-
-        case '/': {
-            toggleOptimization();
-            break;
-        }
-
-        case 'l':
-        case 'L': {
-            show_lines = !show_lines;
-            viewer.data().show_lines = show_lines;
-            break;
-        }
-
-        case 'u':
-        case 'U': {
-            viewUV = !viewUV;
-            break;
-        }
-
-        case 'd':
-        case 'D': {
-            showDistortion++;
-            if (showDistortion > 2) {
-                showDistortion = 0;
-            }
-            break;
-        }
-
-        case 'o':
-        case 'O': {
-            infoName = std::to_string(iterNum);
-            saveInfo(true, false, true);
-            break;
-        }
-
-        case 'a':
-        case 'A': {
-            optimizer->checkGradient();
-            break;
-        }
-
-        default:
-            break;
-        }
-    }
-
-    updateViewerData();
-
-    return false;
-}
-#endif
-
-#ifdef USE_OPENGL
-bool postDrawFunc(igl::opengl::glfw::Viewer& viewer)
-#else
 bool postDrawFunc()
-#endif
 {
     if (autoSwitch && (iterNum == 0)) {
         toggleOptimization();
@@ -567,9 +283,6 @@ bool postDrawFunc()
             exit(0);
         }
         else {
-#ifdef USE_OPENGL
-            viewer.core().is_animating = false;
-#endif
             outerLoopFinished = false;
         }
     }
@@ -577,11 +290,7 @@ bool postDrawFunc()
     return false;
 }
 
-#ifdef USE_OPENGL
-void converge_preDrawFunc(igl::opengl::glfw::Viewer& viewer)
-#else
 void converge_preDrawFunc()
-#endif
 {
     infoName = "finalResult";
 
@@ -589,20 +298,13 @@ void converge_preDrawFunc()
     updateViewerData();
 
     optimization_on = false;
-#ifdef USE_OPENGL
-    viewer.core().is_animating = false;
-#endif
     spdlog::info("optimization converged, with {:d} inner iterations in {:g}s.", optimizer->getInnerIterAmt(), secPast);
     logFile << "optimization converged, with " << optimizer->getInnerIterAmt() << " inner iterations in " << secPast << "s." << std::endl;
     spdlog::critical("simulation finished");
     outerLoopFinished = true;
 }
 
-#ifdef USE_OPENGL
-bool preDrawFunc(igl::opengl::glfw::Viewer& viewer)
-#else
 bool preDrawFunc()
-#endif
 {
     static bool initViewerData = true;
     if (initViewerData) {
@@ -626,11 +328,7 @@ bool preDrawFunc()
         if (converged) {
             saveInfo_postDraw = true;
 
-#ifdef USE_OPENGL
-            converge_preDrawFunc(viewer);
-#else
             converge_preDrawFunc();
-#endif
         }
     }
     return false;
@@ -662,6 +360,66 @@ void init_cli_app(CLI::App& app, CLIArgs& args)
         "set log level (0=trace, 1=debug, 2=info, 3=warn, 4=error, 5=critical,"
         " 6=off)",
         true);
+}
+
+void setupTimer() {
+    timer.new_activity("descent");
+
+    timer_step.new_activity("matrixComputation");
+    timer_step.new_activity("matrixAssembly");
+    timer_step.new_activity("symbolicFactorization");
+    timer_step.new_activity("numericalFactorization");
+    timer_step.new_activity("backSolve");
+    timer_step.new_activity("lineSearch_other");
+    timer_step.new_activity("modifyGrad"); //previously boundarySplit
+    timer_step.new_activity("modifySearchDir"); //previously interiorSplit
+    timer_step.new_activity("updateHistory"); //previously cornerMerge
+    timer_step.new_activity("lineSearch_eVal");
+    timer_step.new_activity("fullyImplicit_eComp");
+    timer_step.new_activity("solve_extraComp");
+    timer_step.new_activity("compGrad");
+    timer_step.new_activity("CCD");
+    timer_step.new_activity("computeConstraintSets");
+
+    timer_temp3.new_activity("init");
+    timer_temp3.new_activity("initPrimal");
+    timer_temp3.new_activity("initDual");
+    timer_temp3.new_activity("initWeights");
+    timer_temp3.new_activity("initCons");
+    timer_temp3.new_activity("subdSolve");
+    timer_temp3.new_activity("consSolve");
+    timer_temp3.new_activity("build hash CCS");
+    timer_temp3.new_activity("PT CCS");
+    timer_temp3.new_activity("EE CCS");
+    timer_temp3.new_activity("merge CCS");
+    timer_temp3.new_activity("build hash CCD");
+    timer_temp3.new_activity("PPET CCD");
+    timer_temp3.new_activity("EE CCD");
+
+    timer_mt.new_activity("query EE CCS");
+    timer_mt.new_activity("type EE CCS");
+    timer_mt.new_activity("dist EE CCS");
+    timer_mt.new_activity("query EE CCD");
+    timer_mt.new_activity("dist EE CCD");
+    timer_mt.new_activity("EV EE CCD");
+    timer_mt.new_activity("getE EE CCS");
+    timer_mt.new_activity("getE EE CCD");
+    timer_mt.new_activity("matSp graph");
+    timer_mt.new_activity("matSp allocate");
+    timer_mt.new_activity("H_elasticity");
+    timer_mt.new_activity("massM");
+    timer_mt.new_activity("H_IPC_ACO");
+    timer_mt.new_activity("H_IPC_MCO");
+    timer_mt.new_activity("H_IPC_Self");
+    timer_mt.new_activity("hashP"); // 15
+    timer_mt.new_activity("hashE");
+    timer_mt.new_activity("hashT");
+    timer_mt.new_activity("constructHash");
+    timer_mt.new_activity("QE_locate");
+    timer_mt.new_activity("QE_loop");
+    timer_mt.new_activity("QE_collect");
+    timer_mt.new_activity("paraEE CCS");
+    timer_mt.new_activity("looping EE CCS");
 }
 
 int main(int argc, char* argv[])
@@ -1155,63 +913,7 @@ int main(int argc, char* argv[])
     spdlog::critical("output path: {:s}", outputFolderPath);
 
     // setup timer
-    timer.new_activity("descent");
-
-    timer_step.new_activity("matrixComputation");
-    timer_step.new_activity("matrixAssembly");
-    timer_step.new_activity("symbolicFactorization");
-    timer_step.new_activity("numericalFactorization");
-    timer_step.new_activity("backSolve");
-    timer_step.new_activity("lineSearch_other");
-    timer_step.new_activity("modifyGrad"); //previously boundarySplit
-    timer_step.new_activity("modifySearchDir"); //previously interiorSplit
-    timer_step.new_activity("updateHistory"); //previously cornerMerge
-    timer_step.new_activity("lineSearch_eVal");
-    timer_step.new_activity("fullyImplicit_eComp");
-    timer_step.new_activity("solve_extraComp");
-    timer_step.new_activity("compGrad");
-    timer_step.new_activity("CCD");
-    timer_step.new_activity("computeConstraintSets");
-
-    timer_temp3.new_activity("init");
-    timer_temp3.new_activity("initPrimal");
-    timer_temp3.new_activity("initDual");
-    timer_temp3.new_activity("initWeights");
-    timer_temp3.new_activity("initCons");
-    timer_temp3.new_activity("subdSolve");
-    timer_temp3.new_activity("consSolve");
-    timer_temp3.new_activity("build hash CCS");
-    timer_temp3.new_activity("PT CCS");
-    timer_temp3.new_activity("EE CCS");
-    timer_temp3.new_activity("merge CCS");
-    timer_temp3.new_activity("build hash CCD");
-    timer_temp3.new_activity("PPET CCD");
-    timer_temp3.new_activity("EE CCD");
-
-    timer_mt.new_activity("query EE CCS");
-    timer_mt.new_activity("type EE CCS");
-    timer_mt.new_activity("dist EE CCS");
-    timer_mt.new_activity("query EE CCD");
-    timer_mt.new_activity("dist EE CCD");
-    timer_mt.new_activity("EV EE CCD");
-    timer_mt.new_activity("getE EE CCS");
-    timer_mt.new_activity("getE EE CCD");
-    timer_mt.new_activity("matSp graph");
-    timer_mt.new_activity("matSp allocate");
-    timer_mt.new_activity("H_elasticity");
-    timer_mt.new_activity("massM");
-    timer_mt.new_activity("H_IPC_ACO");
-    timer_mt.new_activity("H_IPC_MCO");
-    timer_mt.new_activity("H_IPC_Self");
-    timer_mt.new_activity("hashP"); // 15
-    timer_mt.new_activity("hashE");
-    timer_mt.new_activity("hashT");
-    timer_mt.new_activity("constructHash");
-    timer_mt.new_activity("QE_locate");
-    timer_mt.new_activity("QE_loop");
-    timer_mt.new_activity("QE_collect");
-    timer_mt.new_activity("paraEE CCS");
-    timer_mt.new_activity("looping EE CCS");
+    setupTimer();
 
     // * Our approach
     energyParams.emplace_back(1.0);
@@ -1252,37 +954,12 @@ int main(int argc, char* argv[])
 
     if (offlineMode) {
         while (true) {
-#ifdef USE_OPENGL
-            preDrawFunc(viewer);
-            postDrawFunc(viewer);
-#else
             preDrawFunc();
             postDrawFunc();
-#endif
         }
     }
     else {
-#ifdef USE_OPENGL
-        // Setup viewer and launch
-        viewer.core().background_color << 1.0f, 1.0f, 1.0f, 0.0f;
-        viewer.callback_key_down = &key_down;
-        viewer.callback_pre_draw = &preDrawFunc;
-        viewer.callback_post_draw = &postDrawFunc;
-        viewer.data().show_lines = true;
-        viewer.core().orthographic = config.orthographic;
-        viewer.core().camera_zoom *= config.zoom;
-        viewer.core().animation_max_fps = 60.0;
-        viewer.data().point_size = 5;
-        viewer.data().show_overlay = true;
-#if (DIM == 3)
-        if (!config.orthographic) {
-            viewer.core().trackball_angle = Eigen::Quaternionf(Eigen::AngleAxisf(M_PI_4 / 2.0, Eigen::Vector3f::UnitX()));
-        }
-#endif
-        viewer.launch();
-#else
         spdlog::critical("Only offline mode is supported when OpenGL is disabled. See --help for more details.");
-#endif
     }
 
     // Before exit
