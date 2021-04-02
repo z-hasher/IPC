@@ -228,6 +228,7 @@ void Mesh<dim>::computeMassMatrix(const igl::MassMatrixType type)
             MV(i + 2 * m) = v / 4.0;
             MV(i + 3 * m) = v / 4.0;
         }
+        spdlog::error("mass matrix done");
     }
     else {
         // Unsupported simplex size
