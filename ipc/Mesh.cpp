@@ -710,11 +710,13 @@ template <int dim>
 bool Mesh<dim>::checkInversion(bool mute, const std::vector<int>& triangles) const
 {
     if (triangles.empty()) {
+        bool r = true;
         for (int triI = 0; triI < F.rows(); triI++) {
             if (u[triI] && lambda[triI] && !checkInversion(triI, mute)) {
-                return false;
+                r = false;
             }
         }
+        return r;
     }
     else {
         for (const auto& triI : triangles) {
