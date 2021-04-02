@@ -239,7 +239,7 @@ void Mesh<dim>::computeMassMatrix(const igl::MassMatrixType type)
         // for surface mesh as kinematic object
         for (int compI = 0; compI < componentCoDim.size(); ++compI) {
             if (componentCoDim[compI] == 3) {
-                spdlog::error("co-dim obj {} in mass computation", compI);
+                std::cerr << "obj: " << compI << std::endl;
                 continue;
             }
             else if (componentCoDim[compI] == 1) {
@@ -361,9 +361,9 @@ void Mesh<dim>::computeMassMatrix(const igl::MassMatrixType type)
             }
         }
     }
-    spdlog::error("mass matrix computation before sparse")
+    spdlog::error("mass matrix computation before sparse");
     sparse(MI, MJ, MV, n, n, M);
-    spdlog::error("mass matrix computation after sparse")
+    spdlog::error("mass matrix computation after sparse");
 
     massMatrix *= density;
     // IglUtils::writeSparseMatrixToFile("mass", massMatrix, true);
@@ -376,7 +376,7 @@ void Mesh<dim>::computeMassMatrix(const igl::MassMatrixType type)
             }
         }
     }
-    spdlog::error("mass matrix computation done")
+    spdlog::error("mass matrix computation done");
 }
 
 template <int dim>
