@@ -228,7 +228,7 @@ void Mesh<dim>::computeMassMatrix(const igl::MassMatrixType type)
             MV(i + 2 * m) = v / 4.0;
             MV(i + 3 * m) = v / 4.0;
         }
-        spdlog::error("mass matrix done");
+        spdlog::info("volume mass matrix computation done");
     }
     else {
         // Unsupported simplex size
@@ -239,7 +239,7 @@ void Mesh<dim>::computeMassMatrix(const igl::MassMatrixType type)
         // for surface mesh as kinematic object
         for (int compI = 0; compI < componentCoDim.size(); ++compI) {
             if (componentCoDim[compI] == 3) {
-                std::cerr << "obj: " << compI << std::endl;
+                spdlog::info("co-dim = 3: {}", compI);
                 continue;
             }
             else if (componentCoDim[compI] == 1) {
@@ -361,13 +361,10 @@ void Mesh<dim>::computeMassMatrix(const igl::MassMatrixType type)
             }
         }
     }
-    spdlog::error("mass matrix computation before sparse");
     sparse(MI, MJ, MV, n, n, M);
-    spdlog::error("mass matrix computation after sparse");
 
     massMatrix *= density;
     // IglUtils::writeSparseMatrixToFile("mass", massMatrix, true);
-    spdlog::error("mass matrix computation before done");
     double avgMass = avgNodeMass(dim);
     for (int compI = 0; compI < componentCoDim.size(); ++compI) {
         if (componentCoDim[compI] == 0) {
@@ -718,7 +715,7 @@ bool Mesh<dim>::checkInversion(bool mute, const std::vector<int>& triangles) con
                 ++t;
             }
         }
-        spdlog::error("{}/{} is the total inversion", t, F.rows());
+        spdlog::info("{}/{} inversion detected", t, F.rows());
         return r;
     }
     else {
