@@ -367,7 +367,7 @@ void Mesh<dim>::computeMassMatrix(const igl::MassMatrixType type)
 
     massMatrix *= density;
     // IglUtils::writeSparseMatrixToFile("mass", massMatrix, true);
-    spdlog::error("mass matrix computation before done")
+    spdlog::error("mass matrix computation before done");
     double avgMass = avgNodeMass(dim);
     for (int compI = 0; compI < componentCoDim.size(); ++compI) {
         if (componentCoDim[compI] == 0) {
