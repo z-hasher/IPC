@@ -711,11 +711,14 @@ bool Mesh<dim>::checkInversion(bool mute, const std::vector<int>& triangles) con
 {
     if (triangles.empty()) {
         bool r = true;
+        int t = 0;
         for (int triI = 0; triI < F.rows(); triI++) {
             if (u[triI] && lambda[triI] && !checkInversion(triI, mute)) {
                 r = false;
+                ++t;
             }
         }
+        spdlog::error("{}/{} is the total inversion", t, F.rows());
         return r;
     }
     else {
