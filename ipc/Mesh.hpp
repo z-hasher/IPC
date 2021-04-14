@@ -23,6 +23,7 @@ namespace IPC {
 template <int dim>
 class Mesh {
 public: // owned data
+EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Eigen::MatrixXd V_rest; ///< @brief node positions in material space (rest shape)
     Eigen::MatrixXd V; ///< @brief node positions in current world space (current shape)
     Eigen::MatrixXi F; ///< @brief node indices of tetrahedra/triangle element
