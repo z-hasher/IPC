@@ -448,6 +448,7 @@ void Mesh<dim>::computeFeatures(bool multiComp, bool resetFixedV)
 
     vNeighbor.resize(0);
     vNeighbor.resize(V_rest.rows());
+    spdlog::info("computeFeatures: vNeighbor add adjacency for all nodes");
     for (int elemI = 0; elemI < F.rows(); elemI++) {
         const Eigen::Matrix<int, 1, dim + 1>& elemVInd = F.row(elemI);
         for (int vI = 0; vI < dim + 1; vI++) {
@@ -457,6 +458,7 @@ void Mesh<dim>::computeFeatures(bool multiComp, bool resetFixedV)
             }
         }
     }
+    spdlog::info("computeFeatures: vNeighbor add adjacency for boundary nodes");
     for (int sfI = 0; sfI < SF.rows(); ++sfI) {
         const Eigen::Matrix<int, 1, dim>& sfVInd = SF.row(sfI);
         for (int vI = 0; vI < dim; vI++) {
@@ -466,6 +468,7 @@ void Mesh<dim>::computeFeatures(bool multiComp, bool resetFixedV)
             }
         }
     }
+    spdlog::info("computeFeatures: vNeighbor add adjacency for all collision edges");
     for (int ceI = 0; ceI < CE.rows(); ++ceI) {
         vNeighbor[CE(ceI, 0)].insert(CE(ceI, 1));
         vNeighbor[CE(ceI, 1)].insert(CE(ceI, 0));
