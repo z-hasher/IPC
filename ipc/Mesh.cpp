@@ -387,11 +387,13 @@ void Mesh<dim>::computeFeatures(bool multiComp, bool resetFixedV)
         isFixedVert[0] = true;
     }
 
+    spdlog::info("start computeFeatures");
     restTriInv.resize(F.rows());
     triArea.resize(F.rows());
     vFLoc.resize(0);
     vFLoc.resize(V.rows());
     std::vector<Eigen::RowVector3d> vertNormals(V_rest.rows(), Eigen::RowVector3d::Zero());
+    spdlog::info("computeFeatures: tets");
     for (int triI = 0; triI < F.rows(); triI++) {
         const Eigen::Matrix<int, 1, dim + 1>& triVInd = F.row(triI);
 
@@ -428,7 +430,7 @@ void Mesh<dim>::computeFeatures(bool multiComp, bool resetFixedV)
     }
 
     computeMassMatrix(igl::MASSMATRIX_TYPE_VORONOI);
-
+    spdlog::info("computeFeatures: bbox");
     bbox.block(0, 0, 1, 3) = V_rest.row(0);
     bbox.block(1, 0, 1, 3) = V_rest.row(0);
     for (int vI = 1; vI < V_rest.rows(); vI++) {
@@ -442,6 +444,7 @@ void Mesh<dim>::computeFeatures(bool multiComp, bool resetFixedV)
             }
         }
     }
+    spdlog::info("computeFeatures: vNeighbor");
 
     vNeighbor.resize(0);
     vNeighbor.resize(V_rest.rows());
@@ -468,6 +471,7 @@ void Mesh<dim>::computeFeatures(bool multiComp, bool resetFixedV)
         vNeighbor[CE(ceI, 1)].insert(CE(ceI, 0));
     }
 
+    spdlog::info("computeFeatures: boundary edges");
     std::set<std::pair<int, int>> SFEdges_set;
     for (int sfI = 0; sfI < SF.rows(); ++sfI) {
         auto finder = SFEdges_set.find(std::pair<int, int>(SF(sfI, 1), SF(sfI, 0)));
@@ -490,6 +494,7 @@ void Mesh<dim>::computeFeatures(bool multiComp, bool resetFixedV)
         SFEdges.emplace_back(CE(ceI, 0), CE(ceI, 1));
     }
 
+    spdlog::info("computeFeatures: sanity checks");
     // sanity check
     int isoNodeCount = 0;
     for (int vI = 0; vI < V_rest.rows(); ++vI) {
@@ -498,6 +503,7 @@ void Mesh<dim>::computeFeatures(bool multiComp, bool resetFixedV)
         }
     }
     spdlog::info("{:d} isolated nodes detected", isoNodeCount);
+    spdlog::info("computeFeatures: boundary verts");
 
     computeBoundaryVert(SF);
 }
