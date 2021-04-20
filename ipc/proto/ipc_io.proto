@@ -1,0 +1,20 @@
+// Copyright (c) 2021, Carbon3d Inc. All rights reserved
+// Authors: wzheng@carbon3d.com
+syntax = "proto3";
+
+package c3d.xsim.ipc;
+
+message IpcStatus {
+  int32 current_step = 1;
+  int32 total_steps = 2;
+}
+
+// Nodal fields are contained in this message. All fields are flattened arrays.
+// It is flattened in the way that we record all components on a node and then go
+// next. For instance, displacement is:
+// d1_x, d1_y, d1_z, d2_x, d2_y, d2_z, ..., dn_x, dn_y, dn_z
+message IpcNodalFields {
+  // Displacement field with unit of meter. Note that y direction in IPC is actually
+  // z direction in carbon codes.
+  repeated double displacement_m = 1;
+}

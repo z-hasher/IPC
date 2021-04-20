@@ -44,6 +44,7 @@ option(LIBIGL_WITH_XML               "Use XML"                      OFF)
 option(LIBIGL_WITH_PREDICATES        "Use exact predicates"         ON)
 
 # project-options
+option(IPC_WITH_PROTOBUF "Use protobuf as IO tool" OFF)
 option(IPC_WITH_EXACT_CCD "Use exact CCD as a verification"                     ON)
 option(IPC_WITH_TESTS     "Build unit tests using Catch2"                       OFF)
 option(IPC_WITH_GUROBI    "Enable Gurobi QP solver for SQP method"             OFF)
@@ -133,6 +134,12 @@ if(IPC_WITH_PREBUILT_EXT)
   target_include_directories(${PROJECT_NAME}_dev PUBLIC ${EIGEN_INCLUDE_DIR})
 endif()
 
+if(IPC_WITH_PROTOBUF)
+  message(STATUS "Configuring IPC")
+  #find_library(${PROTOBUF_LIBRARIES} REQUIRED)
+  add_subdirectory(ipc/proto)
+  target_link_libraries(${PROJECT_NAME}_dev ipc_proto ${PROTOBUF_LIBRARY})
+endif(IPC_WITH_PROTOBUF)
 ################################################################################
 
 ### Configuration
