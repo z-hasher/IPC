@@ -138,7 +138,7 @@ if(IPC_WITH_PROTOBUF)
   message(STATUS "Configuring IPC")
   #find_library(${PROTOBUF_LIBRARIES} REQUIRED)
   add_subdirectory(ipc/proto)
-  target_link_libraries(${PROJECT_NAME}_dev PUBLIC IPC_PROTO ${PROTOBUF_LIBRARY})
+  target_link_libraries(${PROJECT_NAME}_dev PUBLIC proto ${PROTOBUF_LIBRARY})
 endif(IPC_WITH_PROTOBUF)
 ################################################################################
 
