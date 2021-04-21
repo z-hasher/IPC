@@ -44,7 +44,7 @@ option(LIBIGL_WITH_XML               "Use XML"                      OFF)
 option(LIBIGL_WITH_PREDICATES        "Use exact predicates"         ON)
 
 # project-options
-option(IPC_WITH_PROTOBUF "Use protobuf as IO tool" OFF)
+option(IPC_WITH_PROTOBUF "Use protobuf as IO tool" ON)
 option(IPC_WITH_EXACT_CCD "Use exact CCD as a verification"                     ON)
 option(IPC_WITH_TESTS     "Build unit tests using Catch2"                       OFF)
 option(IPC_WITH_GUROBI    "Enable Gurobi QP solver for SQP method"             OFF)
