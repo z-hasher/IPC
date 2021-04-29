@@ -2840,6 +2840,8 @@ void Optimizer<dim>::saveStatus(const std::string& appendStr)
     spdlog::info("Results writting for Step {}", globalIterNum);
     Eigen::MatrixXd disp = result.V - data0.V;
     const Eigen::VectorXd m(Eigen::Map<Eigen::VectorXd>(disp.data(), disp.size()));
+    spdlog::info("vertex norms: org {}, now {}", data0.V.norm(), result.V.norm());
+    spdlog::info("disp norms: disp {}, wrapped {}", disp.norm(), m.norm());
     const uint64_t size = static_cast<uint64_t>(m.size());
     {
         std::ofstream ost(path);
