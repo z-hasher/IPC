@@ -17,7 +17,7 @@ inputFolderPath = os.path.realpath('.') + '/input/'
 # on Minchen's Mac:
 # progPath = '/Users/mincli/Library/Developer/Xcode/DerivedData/IPC-cegibpdumtrmuqbjruacrqwltitb/Build/Products/Release/IPC'
 # on Ubuntu:
-progPath ='$HOME/c3d/bazel-bin/third_party/ipc/bin/IPC_bin'
+progPath ='$HOME/c3d/bazel-bin/third_party/libipc/bin/IPC_bin'
 # progPath = os.path.realpath('.') + '/build/IPC_bin'
 # progPath = os.path.realpath('.') + '/src/Projects/DistortionMin/DistortionMin'
 
@@ -29,7 +29,7 @@ NTSetStr1 = 'export OMP_NUM_THREADS='
 # for Mac when CHOLMOD is compiled with default LAPACK and BLAS
 NTSetStr2 = 'export VECLIB_MAXIMUM_THREADS='
 
-outdir = '/tmp/ipc_test_outdir'
+outdir = '$HOME/ipc_test_outdir'
 create_dir_cmd = 'mkdir -p {}\n'.format(outdir)
 
 for numOfThreads in ['1', '8', '16']:
