@@ -40,7 +40,7 @@ protected: // referenced data
     Config animConfig;
 
 protected: // owned data
-    static constexpr double kBaseMultiplier = 1.0e15;
+    static constexpr double kBaseMultiplier = 1.0e11;
     bool mute;
     int globalIterNum;
     double relGL2Tol;
