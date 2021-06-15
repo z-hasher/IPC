@@ -2088,7 +2088,8 @@ void Optimizer<dim>::upperBoundMu(double& mu)
     compute_H_b(1.0e-16 * bboxDiagSize2, dHat, H_b);
     double muMax = 1.0e13 * result.avgNodeMass(dim) / (4.0e-16 * bboxDiagSize2 * H_b);
     spdlog::info("mu vs mumax, {:g}, {:g}", mu, muMax);
-    if (mu > muMax) {
+    //if (mu > muMax) {
+    {
         mu = muMax;
         logFile << "upper bounded mu to " << muMax << " at dHat = " << dHat << std::endl;
     }
