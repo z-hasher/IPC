@@ -2259,6 +2259,7 @@ void Optimizer<dim>::postLineSearch(double alpha)
                 }
             }
         }
+        spdlog::info("\n\nupdateMu: {}\n\n", updateMu);
         if (updateMu) {
             mu_IP *= 2.0;
             upperBoundMu(mu_IP);
